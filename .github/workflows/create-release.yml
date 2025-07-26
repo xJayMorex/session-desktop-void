@@ -102,7 +102,6 @@ jobs:
             /repository/binpkgs/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.*.xbps.sha256sum
             /repository/binpkgs/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.*.sig2
             /repository/binpkgs/x86_64-repodata
-            # /repository/binpkgs/x86_64-musl-repodata
           tag_name: "v${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}"
 
   Cleanup:
