@@ -1,0 +1,117 @@
+name: Create release
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  Fetch:
+    if: ${{ github.event_name == 'workflow_dispatch' }} || github.event.pull_request.merged == true
+    runs-on: self-hosted
+    outputs:
+      package: ${{ steps.version.outputs.package }}
+      version: ${{ steps.version.outputs.version }}
+      revision: ${{ steps.version.outputs.revision }}
+      tag: ${{ steps.version.outputs.tag }}
+    environment:
+      name: release
+    steps:
+      - name: Fetch repository
+        uses: actions/checkout@v4
+        with:
+          path: master
+
+      - name: Fetch void-packages
+        uses: actions/checkout@v4
+        with:
+          repository: void-linux/void-packages
+          path: void-packages
+
+      - name: Configure void-packages
+        run: |
+          cp -r master/void-packages ./ 2>/dev/null
+
+      - id: version
+        run: |
+          echo "package=session-desktop" >> $GITHUB_OUTPUT
+          echo "version=$( cat master/void-packages/srcpkgs/session-desktop/template | grep -m 1 'version=' | awk -F '=' '{ print $2 }' )" >> $GITHUB_OUTPUT
+          echo "revision=$( cat master/void-packages/srcpkgs/session-desktop/template | grep -m 1 'revision=' | awk -F '=' '{ print $2 }' )" >> $GITHUB_OUTPUT
+          echo "tag=v$( cat master/void-packages/srcpkgs/session-desktop/template | grep -m 1 'version=' | awk -F '=' '{ print $2 }' | sed 's/+/-/' )" >> $GITHUB_OUTPUT
+
+  Build:
+    needs: [Fetch]
+    strategy:
+      max-parallel: 1
+      matrix:
+        arch: [x86_64]
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Bootstrap ${{ matrix.arch }}
+        run: |
+          cd void-packages
+          ./xbps-src -H /repository -A ${{ matrix.arch }} binary-bootstrap
+      - name: Build ${{ matrix.arch }}
+        run: |
+          cd void-packages
+          ./xbps-src -H /repository -A ${{ matrix.arch }} fetch ${{ needs.Fetch.outputs.package }}
+          ./xbps-src -H /repository -A ${{ matrix.arch }} -C pkg ${{ needs.Fetch.outputs.package }}
+
+  Sign:
+    needs: [Fetch, Build]
+    strategy:
+      max-parallel: 1
+      matrix:
+        arch: [x86_64]
+    runs-on: self-hosted
+    env:
+      XBPS_TARGET_ARCH: ${{ matrix.arch }}
+    steps:
+      - name: Sign ${{ matrix.arch }} package
+        run: |
+          cd /repository/binpkgs
+          rm -f ${{ matrix.arch }}-repodata
+          xbps-rindex --add $PWD/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.${{ matrix.arch }}.xbps
+          XBPS_PASSPHRASE=${{ secrets.SUPERBIA }} xbps-rindex --sign --signedby "xJayMorex" --privkey /repository/xJayMorex.pem $PWD
+          XBPS_PASSPHRASE=${{ secrets.SUPERBIA }} xbps-rindex --sign-pkg --privkey /repository/xJayMorex.pem \
+            $PWD/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.${{ matrix.arch }}.xbps
+          sha256sum ${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.${{ matrix.arch }}.xbps > \
+            ${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.${{ matrix.arch }}.xbps.sha256sum
+
+  Release:
+    needs: [Fetch, Sign]
+    runs-on: self-hosted
+    steps:
+      - name: Checksum check
+        run: |
+          cd /repository/binpkgs
+          cat ${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.*.xbps.sha256sum | sha256sum -c
+
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          body: "Upstream release: <a href='https://github.com/session-foundation/session-desktop/releases/tag/${{ needs.Fetch.outputs.tag }}'>${{ needs.Fetch.outputs.tag }}</a>"
+          files: |
+            /repository/binpkgs/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.*.xbps
+            /repository/binpkgs/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.*.xbps.sha256sum
+            /repository/binpkgs/${{ needs.Fetch.outputs.package }}-${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}.*.sig2
+            /repository/binpkgs/x86_64-repodata
+            # /repository/binpkgs/x86_64-musl-repodata
+          tag_name: "v${{ needs.Fetch.outputs.version }}_${{ needs.Fetch.outputs.revision }}"
+
+  Cleanup:
+    needs: [Release]
+    runs-on: self-hosted
+    steps:
+      - name: Cleanup old release files
+        uses: dev-drprasad/delete-older-releases@v0.3.4
+        with:
+          keep_latest: 15
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
