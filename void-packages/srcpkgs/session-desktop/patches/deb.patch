@@ -1,0 +1,18 @@
+--- a/package.json
++++ b/package.json
+@@ -246,7 +246,14 @@
+     "linux": {
+       "category": "Network;InstantMessaging;Chat",
+       "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
+-      "target": "deb",
++      "target": [
++        {
++          "target": "dir",
++          "arch": [
++            "x64"
++          ]
++        }
++      ],
+       "icon": "build/icon-linux.icns"
+     },
+     "asarUnpack": [

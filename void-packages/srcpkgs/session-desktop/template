@@ -8,7 +8,8 @@ revision=1
 # ARM: https://github.com/signalapp/Signal-Desktop/issues/3410
 archs="x86_64"
 hostmakedepends="git python3 yarn cmake tar"
-makedepends="gtk+3 pango cairo libvips desktop-file-utils hicolor-icon-theme musl-bootstrap"
+depends="gtk+3 pango cairo libvips desktop-file-utils hicolor-icon-theme"
+checkdepends="glib nss libgbm alsa-lib $depends"
 short_desc="Session Private Messenger for Linux"
 maintainer="xJayMorex <github@johntaylor.hu>"
 license="GPL-3.0-or-later"
@@ -17,13 +18,8 @@ distfiles="https://github.com/session-foundation/session-desktop/archive/v${vers
 checksum="4f247a5b344a92e87bf62d73ee1aed5799871b689b7f0bef98dfdadf8a929018"
 nostrip_files="session-desktop"
 
-post_extract() {
+pre_build() {
 	vsed 's/"node": ".*"/"node": ">=20.0.0"/' -i package.json
-
-	# patch node fs with graceful-fs to avoid using too many file descriptors
-	yarn add -D graceful-fs@4.2.11
-	echo "require('graceful-fs').gracefulify(require('fs'));" > ${wrksrc}/use-graceful-fs.js
-	export NODE_OPTIONS="--require ${wrksrc}/use-graceful-fs.js"
 
 	# Install dependencies for session-desktop
 	yarn install
@@ -33,28 +29,21 @@ do_build() {
 	# Build session-desktop
 	yarn build
 	yarn build-release
+}
 
-	# Extract the generated .desktop file
-	bsdtar xOf release/session-desktop-*.deb data.tar.xz | \
-		bsdtar xO ./usr/share/applications/session-desktop.desktop > session-desktop.desktop
-	vsed -i -e 's/\/opt\/Session\///' session-desktop.desktop
+do_check() {
+	yarn test
 }
 
 do_install() {
 	vmkdir usr/lib/session-desktop
-
-	# Remove prebuilt binaries for foreign architectures (to not confuse strip)
-	for prebin in darwin-x64 linux-arm64 win32-ia32 win32-x64; do
-		rm -rf release/linux-unpacked/resources/app.asar.unpacked/node_modules/{ffi-napi,ref-napi}/prebuilds/$prebin
-		rm -rf release/linux-unpacked/resources/app.asar.unpacked/node_modules/ffi-napi/node_modules/ref-napi/prebuilds/$prebin
-	done
-
 	vcopy release/linux-unpacked/* usr/lib/session-desktop
 
 	vmkdir usr/bin
 	ln -s /usr/lib/session-desktop/session-desktop ${DESTDIR}/usr/bin/
 
-	vinstall session-desktop.desktop 644 usr/share/applications
+	vinstall ${FILESDIR}/session-desktop.desktop 644 usr/share/applications
+	vinstall ${FILESDIR}/libc.musl-x86_64.so.1 755 usr/lib
 
 	for size in 16 32 48 64 128 256 512 1024; do
 		vinstall build/icons/icon_${size}x${size}.png 644 usr/share/icons/hicolor/${size}x${size}/apps session-desktop.png

@@ -36,7 +36,6 @@ jobs:
       - name: Configure void-packages
         run: |
           cp -r master/void-packages ./ 2>/dev/null
-          echo "libc.musl-x86_64.so.1 musl-bootstrap-1.2.5_1 x86_64" >> void-packages/common/shlibs
 
       - id: version
         run: |
