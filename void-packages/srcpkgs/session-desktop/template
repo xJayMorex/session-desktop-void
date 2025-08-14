@@ -8,6 +8,7 @@ revision=1
 # ARM: https://github.com/signalapp/Signal-Desktop/issues/3410
 archs="x86_64"
 hostmakedepends="git python3 yarn cmake tar"
+makedepends="gtk+3 pango cairo libvips desktop-file-utils hicolor-icon-theme"
 short_desc="Session Private Messenger for Linux"
 maintainer="xJayMorex <github@johntaylor.hu>"
 license="GPL-3.0-or-later"
