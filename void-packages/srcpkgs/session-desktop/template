@@ -30,7 +30,7 @@ post_extract() {
 
 do_build() {
 	# Build session-desktop
-	yarn build-everything
+	yarn build
 	yarn build-release
 
 	# Extract the generated .desktop file
