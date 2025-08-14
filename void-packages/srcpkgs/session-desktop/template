@@ -1,6 +1,6 @@
 # Template file for 'session-desktop'
 pkgname=session-desktop
-version=1.16.5
+version=1.16.6
 revision=1
 # Session officially only supports x86_64
 # x86_64-musl could potentially work based on the Alpine Signal port:
@@ -13,7 +13,7 @@ maintainer="xJayMorex <github@johntaylor.hu>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/session-foundation/session-desktop"
 distfiles="https://github.com/session-foundation/session-desktop/archive/v${version}.tar.gz"
-checksum="5c38908b4691d4db9710a9e82ac7cc1c118754f75208cb2db4753bd9af1874d7"
+checksum="4f247a5b344a92e87bf62d73ee1aed5799871b689b7f0bef98dfdadf8a929018"
 nostrip_files="session-desktop"
 
 post_extract() {
