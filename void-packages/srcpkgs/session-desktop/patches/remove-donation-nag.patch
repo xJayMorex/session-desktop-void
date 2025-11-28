@@ -1,0 +1,124 @@
+diff --git a/ts/components/conversation/composition/CompositionBox.tsx b/ts/components/conversation/composition/CompositionBox.tsx
+index 6d335bfa7..ab797060e 100644
+--- a/ts/components/conversation/composition/CompositionBox.tsx
++++ b/ts/components/conversation/composition/CompositionBox.tsx
+@@ -60,12 +60,9 @@ import type { CompositionInputRef } from './CompositionInput';
+ import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
+ import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
+ import { formatNumber } from '../../../util/i18n/formatting/generics';
+-import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+-import { showSessionCTA } from '../../dialog/SessionCTA';
+ import { tStripped } from '../../../localization/localeTools';
+ import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
+ import { selectWeAreProUser } from '../../../hooks/useParamSelector';
+-import { CTAVariant } from '../../dialog/cta/types';
+ 
+ export interface ReplyingToMessageProps {
+   convoId: string;
+@@ -739,8 +736,6 @@ class CompositionBoxInner extends Component<Props, State> {
+ 
+     this.linkPreviewAbortController?.abort();
+ 
+-    const isProAvailable = getFeatureFlag('proAvailable');
+-
+     const charLimit = hasPro
+       ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
+       : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
+@@ -750,22 +745,18 @@ class CompositionBoxInner extends Component<Props, State> {
+     if (text.length > charLimit) {
+       const dispatch = window.inboxStore?.dispatch;
+       if (dispatch) {
+-        if (isProAvailable && !hasPro) {
+-          showSessionCTA(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT, dispatch);
+-        } else {
+-          showLocalizedPopupDialog(
+-            {
+-              title: {
+-                token: 'modalMessageTooLongTitle',
+-              },
+-              description: {
+-                token: 'modalMessageTooLongDescription',
+-                limit: formatNumber(charLimit),
+-              },
++        showLocalizedPopupDialog(
++          {
++            title: {
++              token: 'modalMessageTooLongTitle',
+             },
+-            dispatch
+-          );
+-        }
++            description: {
++              token: 'modalMessageTooLongDescription',
++              limit: formatNumber(charLimit),
++            },
++          },
++          dispatch
++        );
+       }
+       return;
+     }
+diff --git a/ts/components/dialog/SessionCTA.tsx b/ts/components/dialog/SessionCTA.tsx
+index 34f428ef6..3646b5e4f 100644
+--- a/ts/components/dialog/SessionCTA.tsx
++++ b/ts/components/dialog/SessionCTA.tsx
+@@ -40,9 +40,7 @@ import {
+ } from './cta/types';
+ import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
+ import { showLinkVisitWarningDialog } from './OpenUrlModal';
+-import { APP_URL, DURATION } from '../../session/constants';
+-import { Data } from '../../data/data';
+-import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
++import { APP_URL } from '../../session/constants';
+ import { Localizer } from '../basic/Localizer';
+ 
+ function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
+@@ -391,8 +389,6 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) =>
+ };
+ 
+ export const useShowSessionCTACb = (variant: CTAVariant) => {
+-  const dispatch = useDispatch();
+-
+   // TODO: remove once pro is released
+   const isProAvailable = useIsProAvailable();
+   const isProCTA = useIsProCTAVariant(variant);
+@@ -400,12 +396,10 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
+     return () => null;
+   }
+ 
+-  return () => showSessionCTA(variant, dispatch);
++  return () => null;
+ };
+ 
+ export const useShowSessionCTACbWithVariant = () => {
+-  const dispatch = useDispatch();
+-
+   // TODO: remove once pro is released
+   const isProAvailable = useIsProAvailable();
+ 
+@@ -413,7 +407,7 @@ export const useShowSessionCTACbWithVariant = () => {
+     if (isProCTAVariant(variant) && !isProAvailable) {
+       return;
+     }
+-    showSessionCTA(variant, dispatch);
++    return;
+   };
+ };
+ 
+@@ -440,16 +434,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+       })
+     );
+     await Storage.put(SettingsKey.proExpiredCTA, false);
+-  } else {
+-    const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
+-    if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
+-      const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
+-      if (
+-        !donateInteractions.includes(URLInteraction.COPY) &&
+-        !donateInteractions.includes(URLInteraction.OPEN)
+-      ) {
+-        dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+-      }
+-    }
+   }
+ }
