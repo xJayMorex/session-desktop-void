@@ -1,0 +1,61 @@
+diff --git a/ts/components/conversation/composition/CompositionBox.tsx b/ts/components/conversation/composition/CompositionBox.tsx
+index 6d335bfa7..238d73ab4 100644
+--- a/ts/components/conversation/composition/CompositionBox.tsx
++++ b/ts/components/conversation/composition/CompositionBox.tsx
+@@ -61,11 +61,9 @@ import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnbl
+ import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
+ import { formatNumber } from '../../../util/i18n/formatting/generics';
+ import { getFeatureFlag } from '../../../state/ducks/types/releasedFeaturesReduxTypes';
+-import { showSessionCTA } from '../../dialog/SessionCTA';
+ import { tStripped } from '../../../localization/localeTools';
+ import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
+ import { selectWeAreProUser } from '../../../hooks/useParamSelector';
+-import { CTAVariant } from '../../dialog/cta/types';
+ 
+ export interface ReplyingToMessageProps {
+   convoId: string;
+@@ -751,7 +749,7 @@ class CompositionBoxInner extends Component<Props, State> {
+       const dispatch = window.inboxStore?.dispatch;
+       if (dispatch) {
+         if (isProAvailable && !hasPro) {
+-          showSessionCTA(CTAVariant.PRO_MESSAGE_CHARACTER_LIMIT, dispatch);
++          // fuck off
+         } else {
+           showLocalizedPopupDialog(
+             {
+diff --git a/ts/components/dialog/SessionCTA.tsx b/ts/components/dialog/SessionCTA.tsx
+index 34f428ef6..7585b2722 100644
+--- a/ts/components/dialog/SessionCTA.tsx
++++ b/ts/components/dialog/SessionCTA.tsx
+@@ -391,8 +391,6 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) =>
+ };
+ 
+ export const useShowSessionCTACb = (variant: CTAVariant) => {
+-  const dispatch = useDispatch();
+-
+   // TODO: remove once pro is released
+   const isProAvailable = useIsProAvailable();
+   const isProCTA = useIsProCTAVariant(variant);
+@@ -400,12 +398,10 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
+     return () => null;
+   }
+ 
+-  return () => showSessionCTA(variant, dispatch);
++  return () => null;
+ };
+ 
+ export const useShowSessionCTACbWithVariant = () => {
+-  const dispatch = useDispatch();
+-
+   // TODO: remove once pro is released
+   const isProAvailable = useIsProAvailable();
+ 
+@@ -413,7 +409,7 @@ export const useShowSessionCTACbWithVariant = () => {
+     if (isProCTAVariant(variant) && !isProAvailable) {
+       return;
+     }
+-    showSessionCTA(variant, dispatch);
++    return;
+   };
+ };
+ 
