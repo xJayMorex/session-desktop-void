@@ -1,6 +1,6 @@
 --- a/package.json
 +++ b/package.json
-@@ -246,7 +246,14 @@
+@@ -247,7 +247,14 @@
      "linux": {
        "category": "Network;InstantMessaging;Chat",
        "asarUnpack": "node_modules/spellchecker/vendor/hunspell_dictionaries",
@@ -13,6 +13,6 @@
 +          ]
 +        }
 +      ],
-       "icon": "build/icon-linux.icns"
-     },
-     "asarUnpack": [
+       "icon": "build/icon-linux.icns",
+       "files": [
+         "!node_modules/@img/sharp-libvips*/lib/*.a*",
