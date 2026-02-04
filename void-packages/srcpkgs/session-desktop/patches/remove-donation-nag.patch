@@ -2,7 +2,7 @@ diff --git a/ts/components/conversation/composition/CompositionBox.tsx b/ts/comp
 index 6d335bfa7..ab797060e 100644
 --- a/ts/components/conversation/composition/CompositionBox.tsx
 +++ b/ts/components/conversation/composition/CompositionBox.tsx
-@@ -60,12 +60,9 @@ import type { CompositionInputRef } from './CompositionInput';
+@@ -55,12 +55,9 @@ import type { CompositionInputRef } from './CompositionInput';
  import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
  import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
  import { formatNumber } from '../../../util/i18n/formatting/generics';
@@ -10,12 +10,12 @@ index 6d335bfa7..ab797060e 100644
 -import { showSessionCTA } from '../../dialog/SessionCTA';
  import { tStripped } from '../../../localization/localeTools';
  import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
- import { selectWeAreProUser } from '../../../hooks/useParamSelector';
 -import { CTAVariant } from '../../dialog/cta/types';
+ import { selectWeAreProUser } from '../../../hooks/useParamSelector';
+ import type { MessageAttributes } from '../../../models/messageType';
  
  export interface ReplyingToMessageProps {
-   convoId: string;
-@@ -739,8 +736,6 @@ class CompositionBoxInner extends Component<Props, State> {
+@@ -621,8 +618,6 @@ class CompositionBoxInner extends Component<Props, State> {
  
      this.linkPreviewAbortController?.abort();
  
@@ -24,7 +24,7 @@ index 6d335bfa7..ab797060e 100644
      const charLimit = hasPro
        ? Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_PRO
        : Constants.CONVERSATION.MAX_MESSAGE_CHAR_COUNT_STANDARD;
-@@ -750,22 +745,18 @@ class CompositionBoxInner extends Component<Props, State> {
+@@ -632,22 +627,18 @@ class CompositionBoxInner extends Component<Props, State> {
      if (text.length > charLimit) {
        const dispatch = window.inboxStore?.dispatch;
        if (dispatch) {
@@ -71,18 +71,16 @@ index 34f428ef6..3646b5e4f 100644
 -import { getUrlInteractionsForUrl, URLInteraction } from '../../util/urlHistory';
 +import { APP_URL } from '../../session/constants';
  import { Localizer } from '../basic/Localizer';
- 
- function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
-@@ -391,8 +389,6 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) =>
+ import {
+   CTAInteraction,
+@@ -405,6 +403,5 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) =>
  };
  
  export const useShowSessionCTACb = (variant: CTAVariant) => {
--  const dispatch = useDispatch();
--
-   // TODO: remove once pro is released
-   const isProAvailable = useIsProAvailable();
+-  const dispatch = getAppDispatch();
+   const isProAvailable = useIsProAvailableMemo();
    const isProCTA = useIsProCTAVariant(variant);
-@@ -400,12 +396,10 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
+@@ -412,10 +409,9 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
      return () => null;
    }
  
@@ -92,11 +90,9 @@ index 34f428ef6..3646b5e4f 100644
  
  export const useShowSessionCTACbWithVariant = () => {
 -  const dispatch = useDispatch();
--
-   // TODO: remove once pro is released
    const isProAvailable = useIsProAvailable();
  
-@@ -413,7 +407,7 @@ export const useShowSessionCTACbWithVariant = () => {
+@@ -423,7 +419,7 @@ export const useShowSessionCTACbWithVariant = () => {
      if (isProCTAVariant(variant) && !isProAvailable) {
        return;
      }
@@ -105,19 +101,28 @@ index 34f428ef6..3646b5e4f 100644
    };
  };
  
-@@ -440,16 +434,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+@@ -453,25 +449,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
        })
      );
      await Storage.put(SettingsKey.proExpiredCTA, false);
 -  } else {
+-    if (!fromAppStart) {
+-      // we only want to show the DonateCTA when the app starts, if needed
+-      return;
+-    }
 -    const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
 -    if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
 -      const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
 -      if (
 -        !donateInteractions.includes(URLInteraction.COPY) &&
--        !donateInteractions.includes(URLInteraction.OPEN)
+-        !donateInteractions.includes(URLInteraction.OPEN) &&
+-        !donateCTAShown
 -      ) {
--        dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+-        const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_GENERIC);
+-        if (!donateCtaInteractions?.open || donateCtaInteractions.open < 4) {
+-          dispatch(updateSessionCTA({ variant: CTAVariant.DONATE_GENERIC }));
+-          donateCTAShown = true;
+-        }
 -      }
 -    }
    }
