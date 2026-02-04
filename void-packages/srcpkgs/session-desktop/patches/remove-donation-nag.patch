@@ -11,7 +11,7 @@ index 6d335bfa7..ab797060e 100644
  import { tStripped } from '../../../localization/localeTools';
  import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 -import { CTAVariant } from '../../dialog/cta/types';
- import { selectWeAreProUser } from '../../../hooks/useParamSelector';
+ import { selectWeAreProUser } from '../../../hooks/useHasPro';
  import type { MessageAttributes } from '../../../models/messageType';
  
  export interface ReplyingToMessageProps {
@@ -78,7 +78,7 @@ index 34f428ef6..3646b5e4f 100644
  
  export const useShowSessionCTACb = (variant: CTAVariant) => {
 -  const dispatch = getAppDispatch();
-   const isProAvailable = useIsProAvailableMemo();
+   const isProAvailable = getIsProAvailableMemo();
    const isProCTA = useIsProCTAVariant(variant);
 @@ -412,10 +409,9 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
      return () => null;
@@ -90,7 +90,7 @@ index 34f428ef6..3646b5e4f 100644
  
  export const useShowSessionCTACbWithVariant = () => {
 -  const dispatch = useDispatch();
-   const isProAvailable = useIsProAvailable();
+   const isProAvailable = getIsProAvailableMemo();
  
 @@ -423,7 +419,7 @@ export const useShowSessionCTACbWithVariant = () => {
      if (isProCTAVariant(variant) && !isProAvailable) {
