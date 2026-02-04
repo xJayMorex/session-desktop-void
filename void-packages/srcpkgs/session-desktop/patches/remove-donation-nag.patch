@@ -100,7 +100,7 @@ index 34f428ef6..3646b5e4f 100644
    };
  };
  
-@@ -447,25 +443,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+@@ -446,25 +442,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
        })
      );
      await Storage.put(SettingsKey.proExpiredCTA, false);
@@ -111,10 +111,10 @@ index 34f428ef6..3646b5e4f 100644
 -    }
 -    const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
 -    if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
--      const donateInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
+-      const donateUrlInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
 -      if (
--        !donateInteractions.includes(URLInteraction.COPY) &&
--        !donateInteractions.includes(URLInteraction.OPEN) &&
+-        !donateUrlInteractions.includes(URLInteraction.COPY) &&
+-        !donateUrlInteractions.includes(URLInteraction.OPEN) &&
 -        !donateCTAShown
 -      ) {
 -        const donateCtaInteractions = getCtaInteractionsForCta(CTAVariant.DONATE_GENERIC);
