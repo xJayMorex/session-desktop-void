@@ -2,7 +2,7 @@ diff --git a/ts/components/conversation/composition/CompositionBox.tsx b/ts/comp
 index 6d335bfa7..ab797060e 100644
 --- a/ts/components/conversation/composition/CompositionBox.tsx
 +++ b/ts/components/conversation/composition/CompositionBox.tsx
-@@ -55,12 +55,9 @@ import type { CompositionInputRef } from './CompositionInput';
+@@ -55,11 +55,8 @@ import type { CompositionInputRef } from './CompositionInput';
  import { useShowBlockUnblock } from '../../menuAndSettingsHooks/useShowBlockUnblock';
  import { showLocalizedPopupDialog } from '../../dialog/LocalizedPopupDialog';
  import { formatNumber } from '../../../util/i18n/formatting/generics';
@@ -12,7 +12,6 @@ index 6d335bfa7..ab797060e 100644
  import type { ProcessedLinkPreviewThumbnailType } from '../../../webworker/workers/node/image_processor/image_processor';
 -import { CTAVariant } from '../../dialog/cta/types';
  import { selectWeAreProUser } from '../../../hooks/useHasPro';
- import type { MessageAttributes } from '../../../models/messageType';
  
  export interface ReplyingToMessageProps {
 @@ -621,8 +618,6 @@ class CompositionBoxInner extends Component<Props, State> {
@@ -89,7 +88,7 @@ index 34f428ef6..3646b5e4f 100644
  };
  
  export const useShowSessionCTACbWithVariant = () => {
--  const dispatch = useDispatch();
+-  const dispatch = getAppDispatch();
    const isProAvailable = getIsProAvailableMemo();
  
 @@ -423,7 +419,7 @@ export const useShowSessionCTACbWithVariant = () => {
@@ -101,7 +100,7 @@ index 34f428ef6..3646b5e4f 100644
    };
  };
  
-@@ -453,25 +449,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+@@ -447,25 +443,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
        })
      );
      await Storage.put(SettingsKey.proExpiredCTA, false);
