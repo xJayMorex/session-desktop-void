@@ -61,7 +61,7 @@ diff --git a/ts/components/dialog/SessionCTA.tsx b/ts/components/dialog/SessionC
 index 34f428ef6..3646b5e4f 100644
 --- a/ts/components/dialog/SessionCTA.tsx
 +++ b/ts/components/dialog/SessionCTA.tsx
-@@ -40,9 +40,7 @@ import {
+@@ -40,17 +40,13 @@ import {
  } from './cta/types';
  import { getFeatureFlag } from '../../state/ducks/types/releasedFeaturesReduxTypes';
  import { showLinkVisitWarningDialog } from './OpenUrlModal';
@@ -72,14 +72,22 @@ index 34f428ef6..3646b5e4f 100644
  import { Localizer } from '../basic/Localizer';
  import {
    CTAInteraction,
-@@ -405,6 +403,5 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) =>
+-  getCtaInteractionsForCta,
+   registerCtaInteraction,
+ } from '../../util/ctaHistory';
+ 
+-let donateCTAShown = false;
+ 
+ function useIsProCTAVariant(v: CTAVariant): v is ProCTAVariant {
+   return useMemo(() => isProCTAVariant(v), [v]);
+@@ -405,6 +401,5 @@ export const showSessionCTA = (variant: CTAVariant, dispatch: Dispatch<any>) =>
  };
  
  export const useShowSessionCTACb = (variant: CTAVariant) => {
 -  const dispatch = getAppDispatch();
    const isProAvailable = getIsProAvailableMemo();
    const isProCTA = useIsProCTAVariant(variant);
-@@ -412,10 +409,9 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
+@@ -412,10 +407,9 @@ export const useShowSessionCTACb = (variant: CTAVariant) => {
      return () => null;
    }
  
@@ -91,7 +99,7 @@ index 34f428ef6..3646b5e4f 100644
 -  const dispatch = getAppDispatch();
    const isProAvailable = getIsProAvailableMemo();
  
-@@ -423,7 +419,7 @@ export const useShowSessionCTACbWithVariant = () => {
+@@ -423,7 +417,7 @@ export const useShowSessionCTACbWithVariant = () => {
      if (isProCTAVariant(variant) && !isProAvailable) {
        return;
      }
@@ -100,15 +108,11 @@ index 34f428ef6..3646b5e4f 100644
    };
  };
  
-@@ -446,25 +442,5 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
-       })
-     );
-     await Storage.put(SettingsKey.proExpiredCTA, false);
--  } else {
--    if (!fromAppStart) {
--      // we only want to show the DonateCTA when the app starts, if needed
--      return;
--    }
+@@ -450,21 +444,6 @@ export async function handleTriggeredProCTAs(dispatch: Dispatch<any>) {
+     if (!fromAppStart) {
+       // we only want to show the DonateCTA when the app starts, if needed
+       return;
+     }
 -    const dbCreationTimestampMs = await Data.getDBCreationTimestampMs();
 -    if (dbCreationTimestampMs && dbCreationTimestampMs + 7 * DURATION.DAYS < Date.now()) {
 -      const donateUrlInteractions = getUrlInteractionsForUrl(APP_URL.DONATE);
