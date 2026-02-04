@@ -14,9 +14,18 @@ short_desc="Session Private Messenger for Linux"
 maintainer="xJayMorex <github@johntaylor.hu>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/session-foundation/session-desktop"
-distfiles="https://github.com/session-foundation/session-desktop/archive/v${version}.tar.gz"
-checksum="26129f5848482bdf1789c51e1deaa8e9761424092cd8a7a92495c310fcf5974d"
+distfiles="https://github.com/session-foundation/session-desktop/archive/v${version}.tar.gz
+ https://github.com/Aerilym/session-localization/archive/refs/heads/main.tar.gz"
+checksum="26129f5848482bdf1789c51e1deaa8e9761424092cd8a7a92495c310fcf5974d
+ b8b74c6ea617b0be0aca5690c7a3b1d6d1147908dfdf6f34b2e19e2a8e3d6e5a"
 nostrip_files="session-desktop"
+
+skip_extraction="main.tar.gz"
+
+post_extract() {
+	# Extract localization submodule
+	vsrcextract -C ts/localization main.tar.gz
+}
 
 pre_build() {
 	vsed 's/"node": ".*"/"node": ">=20.0.0"/' -i package.json
